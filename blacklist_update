@@ -124,7 +124,7 @@ function update() {
 
   for s in $SCRIPTS		# get all the analyzes scripts
     do
-      local LIMIT=${DEFAULT_LIMIT:10}
+      local LIMIT=${DEFAULT_LIMIT}
       . ${s} > $BLACKLIST_TMP	# (cannot source directly into pipe; variable handling)
       # remove local domain # make list of "frequency IP"
       cat $BLACKLIST_TMP | sort | uniq -c | while read freq ip dummy
@@ -166,7 +166,7 @@ function main() {
   # load configuration file
   load_config "$DBL/dbl.cfg" || exit 1
 
-  output=$(load_whitelist "$DBL/whitelist")
+  output=$(load_whitelist "$WHITELIST")
   if [ $? ]
    then
     whitelist=$output
