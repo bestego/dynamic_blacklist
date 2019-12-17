@@ -1,0 +1,32 @@
+# 180110 EvG: created
+
+/1 UPON FIRST USE
+- remove all lines from blacklist starting with IP address
+- edit configuration file to meet requirements
+  -- very important to set correct value for LOCAL IPs!
+- edit dbl.d/*.sh scripts if necessary
+
+/2 dbl.d/*.sh SCRIPTS
+All bash scripts ending at ".sh" in this directory will be sourced by blacklist_ applications.
+Each script must produce simple list of IP addresses to be blocked (one per line)
+$LIMIT variable determines after how many occurences IP address will be blocked
+
+/3 blacklist_* SCRIPTS
+located in /usr/local/bin:
+
+- blacklist_update:
+  -- called from /etc/cron.d/blacklist (every 15min)
+  -- scans log files for suspicious IP addresses and adds them to blacklist
+  -- calls blacklist_cleanup & blacklist_load
+
+- blacklist_cleanup
+  -- removes old entries from blacklist
+ 
+- blacklist_load
+  -- instructs ufw to add blocking IP addresses from blacklist
+     (lines removed from blacklist will not be removed from ufw; restart firewall for this)
+
+/4 NOTES
+- add blacklist_load to rc.local
+- add blacklist_load to script that resets ufw firewall
+  

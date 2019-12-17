@@ -1,0 +1,7 @@
+#!/bin/bash
+
+ANALYSIS=vsftp_authentication_failure
+LIMIT=7
+
+# analyze vsftp log
+awk -F'[ \t=]' -f $DBL/get_ip.awk  reg_expr='vsftp.* authentication failure' /var/log/messages

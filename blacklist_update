@@ -1,0 +1,168 @@
+#!/bin/bash
+
+function load_config() {
+# sources configuration file
+# in: param: configuration_filename
+# out: stdout: error_message when configuration_filename not found
+#      status: 1 when configuration_filename not found, otherwise 0
+#
+  file=""; file=$1
+  if [ -r $file ]
+   then
+    . $file
+    rv=0
+   else
+    echo "ERROR: $0: file \"$file\" cannot be loaded"
+    rv=1
+  fi
+  return $rv
+}
+
+function load_whitelist() {
+# load whitelist_file 
+# in: param: whitelist_file_name
+# out:  stdout: whitelisted_regex (can be empty) 
+#       status: 0
+#
+  local file
+  local whitelist
+  local regex="" 
+
+  if [ $# -ge 1 ]
+   then
+    file=$1
+   else
+    echo $whitelist
+    return 0
+  fi
+
+  if [ ! -e $file ]
+   then
+    echo $whitelist
+    return 0
+  fi
+
+  while read address rest
+   do
+    if [[ $address =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+     then 
+      regex=${address//./\\.}	# make into regex, ex 123\.456\.789
+      whitelist="$whitelist $regex"
+    fi
+   done < $file
+   echo $whitelist
+}
+
+function is_whitelisted() {
+# checks whether ip address matches 
+# in: param: ip_address
+#     env: whitelist
+# out: status: 0 when in whitelist, otherwise 1
+#
+ if [ $# -eq 0 ]
+  then
+   echo "ERROR: $0: is_whitelisted(): invalid number of arguments"
+   return 1
+ fi
+
+ found=1	#false
+ for entry in $whitelist
+  do
+   if [[ $1 =~ ${entry} ]] 
+    then
+     found=0	#true
+    fi
+  done
+ return $found
+
+} # is_whitelisted
+
+
+function update() {
+# scans log files and adds (not whitelisted) ip_address to blacklist 
+# in: param:
+#     env: SCRIPS, [LIMIT], ANALYSIS, BLACKLIST
+# out: 
+#
+  local BLACKLIST_TMP="/tmp/$$_blacklist_tmp"
+  local reg_expr=""
+
+  # create empty blacklist if not exisiting and
+  # 	check writability blacklist directory
+  #if ! test touch $BLACKLIST 2> /dev/null
+  if ! touch $BLACKLIST 2> /dev/null
+   then
+    echo "ERROR: blacklist directory \"$(dirname $BLACKLIST)\" not writable"
+    return 1
+  fi
+
+  if [ ! -r $BLACKLIST ]
+   then
+    echo "ERROR: blacklist \"$BLACKLIST\" not readable"
+    return 1
+  fi
+ 
+  
+
+  for s in $SCRIPTS		# get all the analyzes scripts
+    do
+      local LIMIT=${DEFAULT_LIMIT:10}
+      . ${s} > $BLACKLIST_TMP	# (cannot source directly into pipe; variable handling)
+      # remove local domain # make list of "frequency IP"
+      cat $BLACKLIST_TMP | sort | uniq -c | while read freq ip dummy
+       do
+         if is_whitelisted $ip
+          then
+           continue	# skip whitelist entries
+         fi
+         if test $freq -gt $LIMIT	# check if frequency exceeds limit
+            then
+              reg_expr="^[^#]*$ip"
+              if ! grep -q $reg_expr $BLACKLIST	#check if IP already in blacklist
+                then
+                  echo $ip '#' $freq '#' $ANALYSIS': '`date "+%F %T"` >> $BLACKLIST	# add IP to blacklist
+              fi
+         fi
+       done
+  done
+  rm -f $BLACKLIST_TMP
+}
+
+function main() {
+# in: param: home directory containing configuration file, blacklist [, whitelist]
+
+  # check presence and validity of 1st argument
+  if [ $# -eq 0  ] 
+   then
+    echo "main(): missing argument"
+    exit 1
+   else
+    DBL=$1
+  fi
+  if [ ! -d $DBL ] 
+   then
+    echo "main(): directory \"$DBL\" not exitisting"
+    exit 1
+  fi
+   
+  # load configuration file
+  load_config "$DBL/dbl.cfg" || exit 1
+
+  output=$(load_whitelist "$DBL/whitelist")
+  if [ $? ]
+   then
+    whitelist=$output
+   else
+    echo $output
+    exit 1
+  fi
+
+  # update blacklist by scanning log files for unwanted actions
+  update || exit 1
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+then
+  main $1
+fi
+
