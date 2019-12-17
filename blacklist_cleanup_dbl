@@ -7,6 +7,7 @@
 #
 # 180110 EvG: created
 # 180829 EvG: bug fixed related to changed date format in blacklist
+# 191217 EvG: completely refactored for BATS usage
 #################################################################################
 
 # INITIALIZATION
