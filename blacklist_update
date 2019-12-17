@@ -1,4 +1,22 @@
 #!/bin/bash
+#################################################################################
+#
+# Creates blacklist from log files of suspicious IP addresses
+#
+# 041004 EvG: created
+# 041006 EvG: analyzes performed externally in dbl.d/*.sh scripts
+#             .sh script generate IP list to stdout
+# 041006 EvG: DEFAULT_LIMIT implemented
+# 180108 EvG: adapted for amsterdam Ubuntu
+# 180110 EvG: added blacklist_load & blacklist_cleanup
+# 180522 EvG: change day format to solve name of month issues (mei vs may)
+# 180830 EvG: blacklist_cleanup renamed blacklist_cleanup_dbl
+# 180830 EvG: added blacklist_cleanup_fw
+# 191102 EvG: changed blacklist_load to blacklist_modify; removed blacklist_cleanup_fw
+# 191204 EvG: added whitelist funcationality
+# 191206 EvG: fix bug that not evaluating complete whitelist
+# 191217 EvG: completely refactored for BATS unit testing
+#################################################################################
 
 function load_config() {
 # sources configuration file
