@@ -10,6 +10,7 @@ setup() {
 }
 
 teardown() {
+  true
   rm -rf $BATS_TMPDIR
 }
 
@@ -205,15 +206,12 @@ teardown() {
   BLACKLIST="$BATS_TMPDIR/${PID}_blacklist"
   whitelist="999\.888\.777 111\.222\.333 444\.555\.666"
   run update
-  rm -f $BATS_TMPFILE
-  run cat $DBL/$BLACKLIST
-  rm -f $DBL/$BLACKLIST
-  [ $status == 1 ]
+  [ $(cat $BLACKLIST | wc -l) -eq 0 ]
 }
 
 @test "update entry below limit" {
   PID=$$
-  # create analysis script
+  # create analysis SCRIPT
   BATS_TMPFILE="$BATS_TMPDIR/${PID}_analysis.sh"
   echo "ANALYSIS=BATS" >>$BATS_TMPFILE
   echo "LIMIT=4" >>$BATS_TMPFILE
@@ -225,9 +223,7 @@ teardown() {
   source ../blacklist_update
   BLACKLIST="$BATS_TMPDIR/${PID}_blacklist"
   run update
-  rm -f $BATS_TMPFILE
-  run cat $DBL/$BLACKLIST
-  [ $status == 1 ] 
+  [ $(cat $BLACKLIST | wc -l)  -eq 0 ] 
 }
 
 @test "main without arguments" {

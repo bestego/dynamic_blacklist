@@ -1,0 +1,141 @@
+#!/bin/bash
+#
+#################################################################################
+#
+# Cleanup blacklist; remove entries older than $OLDEST
+# 	in: $DBL/dbl.cfg configuration file
+#
+# 180110 EvG: created
+# 180829 EvG: bug fixed related to changed date format in blacklist
+#################################################################################
+
+# INITIALIZATION
+
+function load_config() {
+# sources configuration file
+# in: param: configuration_filename
+# out: stdout: error_message when configuration_filename not found
+#      status: 1 when configuration_filename not found, otherwise 0
+#
+  file=""; file=$1
+  if [ -r $file ]
+   then
+    . $file
+    rv=0
+   else
+    echo "ERROR: $0: file \"$file\" cannot be loaded"
+    rv=1
+  fi
+  return $rv
+}
+
+function is_blacklist_readable() {
+# test existence/readability of blacklist
+# in: param: file
+# out: stdout: error message if file not readable
+#ì     status: 1 if file not readable, else 0
+  if test ! -r ${1:-Undefined}
+   then
+    echo "ERROR $0: blacklist \"$BLACKLIST\" not readable"
+    return 1
+  fi
+}
+
+function expiration_date() {
+# get unix time for expiration date
+# in: param: days	#nr of days before now
+# out: stdout: expiration date
+#    : status: 1 if error, else 0
+
+  [ $# -eq 1 ] || return 1			# missing argument
+  [[ "$1" =~ ^[0-9]+$ ]] || return 1		# argument must be numeric
+  
+  date -d "now -$1 days" +%s
+}
+
+function update() {
+# removes entries from blacklist older than expiration date
+# in: param: expiration_date 	# unix timestamp
+#     env: BLACKLIST
+# out: stdout: message in case of error
+#      status: 1 if error, else 0
+
+  local BLACKLIST_TMP="/tmp/$$_blacklist_tmp"
+  touch $BLACKLIST_TMP	# create empty file
+
+  if [ $# -eq 0 ]
+   then
+    echo "ERROR: missing expiration date"
+    return 1
+  fi
+  if [[ ! "$1" =~ ^[0-9]+$ || ${#1} -lt 10 ]]
+   then
+    echo "ERROR: invalid expiration date"
+    return 1 
+  fi
+  local oldest=$1
+
+  # read each line from blacklist
+  if [ ! -r $BLACKLIST ]
+   then
+    echo "ERROR: blacklist \"$BLACKLIST\" not readable" 
+    return 1
+  fi
+  cat $BLACKLIST | while read line
+   do
+    if [[ "$line" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]
+     then 
+       # check date
+       string=${line#*:}
+       if [[ "$string" =~ ^[\ -:0-9]+$ ]]	# check valid date spec
+        then
+         datetime=`date -d "$string" +%s`
+
+         if [ $datetime -gt $oldest ]
+          then
+           echo $line >>$BLACKLIST_TMP			# only output valid IP lines
+          else
+           echo $line >>${BLACKLIST}.old		# save old info for analysis
+         fi
+ 
+       fi
+     else	
+       echo $line >>$BLACKLIST_TMP			# output all other (non IP) lines
+    fi
+   done
+  
+  mv -f $BLACKLIST_TMP $BLACKLIST
+}
+
+function main() {
+# in: param: home directory containing configuration file, blacklist [, whitelist]
+
+  # check presence and validity of 1st argument
+  if [ $# -eq 0  ] 
+   then
+    echo "main(): missing argument"
+    exit 1
+   else
+    DBL=$1
+  fi
+  if [ ! -d $DBL ] 
+   then
+    echo "main(): directory \"$DBL\" not exitisting"
+    exit 1
+  fi
+   
+  # load configuration file
+  load_config "$DBL/dbl.cfg" || exit 1
+
+  # calculate expiration date
+  expiration=$(expiration_date $OLDEST) || exit 1
+
+  # update blacklist by scanning log files for unwanted actions
+  update $expiration || exit 1
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+then
+  main $1
+fi
+
