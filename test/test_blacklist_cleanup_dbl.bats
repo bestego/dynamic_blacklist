@@ -16,20 +16,20 @@ teardown() {
 @test "load config file readable" {
   BATS_TMPFILE="$BATS_TMPDIR/$$_dbl.cfg"
   echo "ABC=123" > $BATS_TMPFILE
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run load_config $BATS_TMPFILE
   [ $status == 0 ] 
 }
 
 @test "load config file not readable" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run load_config "notExistingFile"
   [[ "$output" =~ ^ERROR ]]
   [ $status == 1 ] 
 }
 
 @test "expiration date valid input" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run expiration_date 37
   [ $status -eq 0 ]
   [ ${#output} -ge 10 ]
@@ -37,13 +37,13 @@ teardown() {
 }
 
 @test "expiration date non-numeric input" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run expiration_date 3a7
   [ $status -eq 1 ]
 }
 
 @test "expiration date missing input" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run expiration_date 
   [ $status -eq 1 ]
 }
@@ -55,7 +55,7 @@ teardown() {
   expirationDate=`date -d "now -99 days" +%s`
   echo "111.222.333.444 # 3 # BATS: $dateTime" >> "$BLACKLIST"
   
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run update $expirationDate
   
   [ $status -eq 0 ]
@@ -70,7 +70,7 @@ teardown() {
   expirationDate=`date -d "now -9 days" +%s`
   echo "111.222.333.444 # 3 # BATS: $dateTime" >> "$BLACKLIST"
   
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run update $expirationDate
   
   [ $status -eq 0 ]
@@ -79,7 +79,7 @@ teardown() {
 }
 
 @test "update missing input" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run update 
 
   [ $status -eq 1 ]
@@ -87,7 +87,7 @@ teardown() {
 }
 
 @test "update non-numeric input" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run update 1a2
 
   [ $status -eq 1 ]
@@ -95,7 +95,7 @@ teardown() {
 }
 
 @test "update too short numberic input" {
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run update 123
 
   [ $status -eq 1 ]
@@ -108,7 +108,7 @@ teardown() {
   touch "$BLACKLIST"		# create empty blacklist
   chmod 000 "$BLACKLIST"	# block blacklist for reading
 
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run update 1234567890		# param length >= 10
 
   [ $status -eq 1 ]
@@ -117,15 +117,15 @@ teardown() {
 
 @test "main without arguments" {
 #skip
-  source ../blacklist_cleanup_dbl
+  source ../bin/blacklist_cleanup_dbl
   run main 
   [ $status -eq 1 ]
 }
 
 @test "main standard operation" {
 #skip
-  source ../blacklist_cleanup_dbl
-  run main "${BATS_TEST_DIRNAME}/../etc"
+  source ../bin/blacklist_cleanup_dbl
+  run main "${BATS_TEST_DIRNAME}/../cfg"
   [ $status -eq 0 ]
 }
 

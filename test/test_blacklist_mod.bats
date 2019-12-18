@@ -17,13 +17,13 @@ teardown() {
 @test "load config file readable" {
   BATS_TMPFILE="$BATS_TMPDIR/$$_dbl.cfg"
   echo "ABC=123" > $BATS_TMPFILE
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   run load_config $BATS_TMPFILE
   [ $status == 0 ] 
 }
 
 @test "load config file not readable" {
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   run load_config "notExistingFile"
   [[ "$output" =~ ^ERROR ]]
   [ $status == 1 ] 
@@ -34,7 +34,7 @@ teardown() {
   PID=$$
   TMPFILE="$BATS_TMPDIR/${PID}"
   
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
 
   # stubbing ufw
   function ufw() {
@@ -58,7 +58,7 @@ teardown() {
   PID=$$
   TMPFILE="$BATS_TMPDIR/${PID}"
   
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   # stubbing ufw
   function ufw() {
     return 1
@@ -78,7 +78,7 @@ teardown() {
   echo "119.29.15.120 # 17 # authentication_failure: 2019-11-10 13:00:01" >>"$BLACKLIST"
   echo "118.24.81.234 # 20 # authentication_failure: 2019-11-10 13:15:01" >>"$BLACKLIST"
 
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   run get_blacklist
 
   [ $(cat ${TMPFILE}_dbl | wc -l) -eq 3 ]
@@ -94,7 +94,7 @@ teardown() {
   echo "118.24.81.234 # 20 # authentication_failure: 2019-11-10 13:15:01" >>"$BLACKLIST"
   chmod 000 $BLACKLIST
 
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   run get_blacklist
 
   [ $status -eq 1 ] 
@@ -105,7 +105,7 @@ teardown() {
   TMPFILE="$BATS_TMPDIR/${PID}"
   BLACKLIST="$BATS_TMPDIR/${PID}_blacklist"
 
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   run get_blacklist
 
   [ $status -eq 0 ] 
@@ -126,7 +126,7 @@ teardown() {
   echo "> 118.24.81.234" >>${TMPFILE}_diff
   echo "> 119.29.15.120" >>${TMPFILE}_diff
   
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
 
   # stubbing ufw
   function ufw() {
@@ -161,7 +161,7 @@ teardown() {
   echo "> 119.29.15.120" >>${TMPFILE}_diff
   touch $LOCK	# create lock
   
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
 
   # stubbing ufw
   function ufw() {
@@ -194,7 +194,7 @@ teardown() {
   echo "> 118.24.81.234" >>${TMPFILE}_diff
   echo "> 119.29.15.120" >>${TMPFILE}_diff
   
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
 
   # stubbing ufw
   function ufw() {
@@ -210,14 +210,14 @@ teardown() {
 
 @test "main without arguments" {
 #skip
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
   run main 
   [ $status -eq 1 ]
 }
 
 @test "main standard operation" {
 #skip
-  source ../blacklist_mod
+  source ../bin/blacklist_mod
 
   function ufw() {
     case $1 in
@@ -236,7 +236,7 @@ teardown() {
   }
   export -f ufw
 
-  run main "${BATS_TEST_DIRNAME}/../etc"
+  run main "${BATS_TEST_DIRNAME}/../cfg"
   #echo "# output: $output" >&3
   [ $status -eq 0 ]
 }
