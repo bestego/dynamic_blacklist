@@ -116,16 +116,16 @@ teardown() {
 }
 
 @test "main without arguments" {
-skip
+#skip
   source ../blacklist_cleanup_dbl
   run main 
   [ $status -eq 1 ]
 }
 
 @test "main standard operation" {
-skip
+#skip
   source ../blacklist_cleanup_dbl
-  run main .
+  run main "${BATS_TEST_DIRNAME}/../etc"
   [ $status -eq 0 ]
 }
 

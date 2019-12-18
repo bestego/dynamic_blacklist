@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+#####################################################################################
+# modifies ufw according blacklist 
+# NOTE: NAME MUST BE <= 15 CHARACTERS IN ORDER FOR
+#	 pgrep truncates process name to 15 characters!
+#
+# 180109 EvG: created for amsterdam Ubuntu
+# 180110 EvG: v3.0 <add comment>
+# 191101 EvG: recreated to solve 'iptabels: chain already exists' problem
+# 191104 EvG: added logging when adding/deleting rule fails
+# 191217 EvG: completely refactored for BATS unit testing
+#####################################################################################
+
+function load_config() {
+# sources configuration file
+# in: param: configuration_filename
+# out: stdout: error_message when configuration_filename not found
+#      status: 1 when configuration_filename not found, otherwise 0
+#
+  file=""; file=$1
+  if [ -r $file ]
+   then
+    . $file
+    rv=0
+   else
+    echo "ERROR: configuration file \"$file\" cannot be loaded"
+    rv=1
+  fi
+  return $rv
+}
+
+function get_firewall() {
+# write blocked IP addresses from UFW to temp file
+# in: param:
+#     env: TMPFILE
+# out: stdout:
+#      status: return status of firewall
+#
+  ufw status | awk '/DENY/ { print $NF }' | sort -n > "${TMPFILE}_ufw"
+  return ${PIPESTATUS[0]} 
+}
+
+function get_blacklist() {
+# get IP address from blacklist and write to temp file
+# in: param:
+#     env: BLACKLIST TMPFILE
+# out: stdout: error message
+#      status: 1 if blacklist not readable, else 0
+ 
+  if [ -e $BLACKLIST -a ! -r $BLACKLIST ]
+   then
+    echo "ERROR: blacklist \"$BLACKLIST\" not readable"
+    return 1
+   else
+    touch $BLACKLIST	# create empy file of not exisiting
+  fi
+ 
+  awk '/^[0-9]+/ { print $1 }' $BLACKLIST | sort -n > "${TMPFILE}_dbl"
+}
+
+function update_firewall() {
+# update firewall with differences between blacklist and firewall
+# in: param:
+#     env: TMPFILE LOG LOCK
+# out: stdout: ?
+#      status: ?
+
+  # check if already instance running
+  if [ -e "$LOCK" ]
+   then
+    echo "WARNING: already instance running"
+    return 1
+   else
+    touch "$LOCK"
+  fi
+
+  cat "${TMPFILE}_diff" | while read first ip
+   do
+  
+    # insert rule
+    if [ $first == ">" ]
+     then
+      if ufw insert 1 deny from $ip
+       then
+        echo `date` "$ip inserted" >>$LOG
+       else
+        echo `date` "ERROR inserting $ip" >>$LOG
+      fi
+     fi
+  
+     # delete rule
+     if [ $first == "<" ]
+      then
+       if ufw delete deny from $ip
+        then
+         echo `date` "$ip deleted" >>$LOG
+        else
+         echo `date` "ERROR deleting $ip" >>$LOG
+       fi
+     fi
+  
+    done
+  
+  # cleanup
+  rm -rf "$LOCK"
+} 
+
+function main() {
+# in: param: home directory containing configuration file, blacklist [, whitelist]
+
+  # check presence and validity of 1st argument
+  if [ $# -eq 0  ] 
+   then
+    echo "main(): missing argument"
+    exit 1
+   else
+    DBL=$1
+  fi
+  if [ ! -d $DBL ] 
+   then
+    echo "main(): directory \"$DBL\" not exitisting"
+    exit 1
+  fi
+   
+  # set TMPFILE
+  TMPFILE="/tmp/${$}_dbl"
+  # load configuration file
+  load_config "$DBL/dbl.cfg" || exit 1
+
+  # get blocked addresses from firewall
+  get_firewall || (rm -f ${TMPFILE}* && exit 1)	
+
+  # get blocked addressed from blacklist
+  get_blacklist || (rm -f ${TMPFILE}* && exit 1)
+
+  # compare blacklist with firewall
+  diff "${TMPFILE}_ufw" "${TMPFILE}_dbl" > "${TMPFILE}_diff"
+
+  # update blacklist by scanning log files for unwanted actions
+  update_firewall $expiration || (rm -f ${TMPFILE}* && exit 1)
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+then
+  main $1
+fi
+

@@ -227,16 +227,16 @@ teardown() {
 }
 
 @test "main without arguments" {
-skip
+#skip
   source ../blacklist_update
   run main 
   [ $status -eq 1 ]
 }
 
 @test "main standard operation" {
-skip
+#skip
   source ../blacklist_update
-  run main .
+  run main "${BATS_TEST_DIRNAME}/../etc"
   [ $status -eq 0 ]
 }
 
