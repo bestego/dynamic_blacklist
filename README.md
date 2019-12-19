@@ -1,5 +1,7 @@
 # dynamic_blacklist
-Dynamically adapts firewall against unwanted external access
+Dynamically adapts firewall against unwanted external access.
+
+The program scans the systems log files for unwanted access and blocks corresponding IP addresses when number of occurences exceed a limit.
 
 # Prerequisite
 This program is designed for & tested on Ubuntu systems.
