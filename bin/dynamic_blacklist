@@ -1,0 +1,8 @@
+#/bin/bash
+
+base_dir=$(dirname $0)
+$base_dir/blacklist_update $1 || exit 1
+$base_dir/blacklist_mod $1 || exit 1
+$base_dir/blacklist_cleanup_dbl $1
+
+

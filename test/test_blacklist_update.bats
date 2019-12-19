@@ -46,6 +46,18 @@ teardown() {
   [ ${#output} -eq 0 ]
 }
 
+@test "load whitelist not existing" {
+  BATS_TMPFILE="$BATS_TMPDIR/$$_whitelist"
+  # valid entry with embedded spaces tabs and trailing comment
+
+  source ../bin/blacklist_update
+  run load_whitelist "$BATS_TMPFILE"
+
+  [ $status -eq 0 ]
+  [ ${#output} -eq 0 ]
+}
+
+
 @test "load whitelist valid address" {
   BATS_TMPFILE="$BATS_TMPDIR/$$_whitelist"
   # valid entry with embedded spaces tabs and trailing comment
@@ -84,12 +96,6 @@ teardown() {
   run load_whitelist "$BATS_TMPFILE"
   rm -f $BATS_TMPFILE
   [ $status == 0 ]
-  [ ${#output} -eq 0 ]
-}
-
-@test "load whitelist not exisiting" {
-  source ../bin/blacklist_update
-  run load_whitelist 
   [ ${#output} -eq 0 ]
 }
 
@@ -238,7 +244,6 @@ teardown() {
   source ../bin/blacklist_update
   run main "${BATS_TEST_DIRNAME}/../cfg"
   
-  echo "# output: $output" >&3
   [ $status -eq 0 ]
 }
 

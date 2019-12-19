@@ -21,14 +21,22 @@ function main() {
 # out: stdout: 
 #      status: 0 when OK, else 1
 
-  local base_dir=$(dirname $0)
+  local base_dir="" 
+  if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+   then
+    base_dir=$(dirname $0)
+   else
+    base_dir="$(dirname ${BASH_SOURCE[0]})"
+  fi
 
-  local user=${BATS_USER:-$(whoami)}
+  local user=${BATS_USER:-$(whoami)}	# BATS_USER: for test manupilation
   [ $user == "root" ] || { echo "must run as 'root'"; exit 1; }
  
-  local install_dir=$(get_input "Executables directory: " "/usr/local/bin}")
-  #[ -e $install_dir ] || { echo "directory \"$install_dir\" does not exist"; exit 1; }
-  [ -e $install_dir ] || { mkdir -p $install_dir ||  { echo "directory \"$install_dir\" does not exist"; exit 1; } }
+  local install_dir=$(get_input "Executables directory: " "/usr/local/bin")
+  if [ ! -e $install_dir ] 
+   then
+    mkdir -p $install_dir || { echo "directory \"$install_dir\" does not exist"; exit 1; }
+  fi
   
   local config_dir=$(get_input "Configurations directory: " "/etc/dbl")
   if [ ! -e $config_dir ]
@@ -36,8 +44,8 @@ function main() {
     mkdir $config_dir || { echo "Cannot create \"$config_dir\""; exit 1; }
   fi
 
-  echo cp $base_dir/blacklist_* $install_dir
-  echo cp -r $base_dir/etc/* $config_dir
+  cp $base_dir/bin/* $install_dir || exit 1
+  cp -r $base_dir/cfg/dbl.cfg $base_dir/cfg/whitelist $base_dir/cfg/dbl.d  $config_dir || exit 1
 
   return 0
 }
