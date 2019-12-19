@@ -57,7 +57,6 @@ teardown() {
 
   #echo "# status,output: $status,$output" >&3
   [ $status -eq 0 ] 
-  [ $(ls "$BATS_TMPDIR/bin" | wc -w) -gt 1 ]
-  [ -e "$BATS_TMPDIR/etc/dbl.cfg" ]
-  [ -e "$BATS_TMPDIR/etc/dbl.d" ]
+  [ $(ls "$BATS_TMPDIR/bin" | wc -w) -eq 4 ]
+  [ $(ls "$BATS_TMPDIR/etc" | wc -w) -eq 4 ]
 }

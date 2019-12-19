@@ -45,7 +45,7 @@ function main() {
   fi
 
   cp $base_dir/bin/* $install_dir || exit 1
-  cp -r $base_dir/cfg/dbl.cfg $base_dir/cfg/whitelist $base_dir/cfg/dbl.d  $config_dir || exit 1
+  cp -r $base_dir/cfg/dbl.cfg $base_dir/cfg/get_ip.awk $base_dir/cfg/whitelist $base_dir/cfg/dbl.d  $config_dir || exit 1
 
   return 0
 }
