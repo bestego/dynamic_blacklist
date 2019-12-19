@@ -17,8 +17,8 @@ Installation script will prompt for installation directories for binary files an
 Make sure installation directory for binaries is included in PATH definition.
 In the directory for configuration files:
 * edit dbl.cfg to your needs
-* include LAN IP segment into whitelist
-* optionally: include trusted hosts in whitelist
+* include LAN IP segment into whitelist (optionally: include trusted hosts)
+* the dbl.d dirtory contains scripts ending at .sh ; Each script performs a specific check in a specific system log file. It may be necessary to change/add/delete scripts depending on your syste setup and needs.
 
 # Usage
 Run dynamic_blacklist configuration_directory
