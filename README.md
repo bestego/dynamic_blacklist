@@ -8,9 +8,10 @@ This program is designed for & tested on Ubuntu systems.
 It requires usage of *ufw* firewall.
 
 # Installation
-Download this program in some temporary_directory.
+Download this program as a ZIP file in some temporary_directory, and uncompress
 ```
 cd temporary_directory
+unzip *zip
 sudo ./install.sh
 ```
 Installation script will prompt for installation directories for binary files and for configuration files.
