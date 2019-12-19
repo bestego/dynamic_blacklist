@@ -106,6 +106,17 @@ function update_firewall() {
   rm -rf "$LOCK"
 } 
 
+function clean_exit() {
+# removes temporary files and exists
+# in: param: exit_code
+#     env: TMPFILE
+# out: stdout:
+#      status: given exit_code or else 0
+
+  rm -rf ${TMPFILE:-Undefined}*
+  exit ${1:-0}
+}
+
 function main() {
 # in: param: home directory containing configuration file, blacklist [, whitelist]
 
@@ -126,19 +137,21 @@ function main() {
   # set TMPFILE
   TMPFILE="/tmp/${$}_dbl"
   # load configuration file
-  load_config "$DBL/dbl.cfg" || exit 1
+  load_config "$DBL/dbl.cfg" || clean_exit 1
 
   # get blocked addresses from firewall
-  get_firewall || (rm -f ${TMPFILE}* && exit 1)	
+  get_firewall || clean_exit 1	
 
   # get blocked addressed from blacklist
-  get_blacklist || (rm -f ${TMPFILE}* && exit 1)
+  get_blacklist || clean_exit 1
 
   # compare blacklist with firewall
   diff "${TMPFILE}_ufw" "${TMPFILE}_dbl" > "${TMPFILE}_diff"
 
   # update blacklist by scanning log files for unwanted actions
-  update_firewall $expiration || (rm -f ${TMPFILE}* && exit 1)
+  update_firewall $expiration || clean_exit 1
+
+  clean_exit 0
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]

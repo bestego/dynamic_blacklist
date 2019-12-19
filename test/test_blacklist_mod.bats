@@ -208,6 +208,17 @@ teardown() {
   [ $(grep -c "ERROR[ ]*deleting" $LOG) -eq 3 ]
 }
 
+@test "clean exit" {
+  TMPFILE="$BATS_TMPDIR/$$_tmpfile"
+  touch "$TMPFILE"
+
+  source ../bin/blacklist_mod
+  run clean_exit 9
+
+  [ $status -eq 9 ] 
+  [ ! -e $TMPFILE ]
+}
+
 @test "main without arguments" {
 #skip
   source ../bin/blacklist_mod

@@ -17,28 +17,32 @@ function get_input() {
 
 function main() {
 # in: params: 
-#     env: [$INSTALL_DIR]
+#     env: 
 # out: stdout: 
 #      status: 0 when OK, else 1
 
   local base_dir=$(dirname $0)
 
-  local user=$(whoami)
-  [ $user == "root" ] || (echo "must run as 'root'"; exit 1)
+  local user=${BATS_USER:-$(whoami)}
+  [ $user == "root" ] || { echo "must run as 'root'"; exit 1; }
  
   local install_dir=$(get_input "Executables directory: " "/usr/local/bin}")
-  [ -e $install_dir ] || ( echo "directory \"$install_dir\" does not exist"; exit 1)
+  #[ -e $install_dir ] || { echo "directory \"$install_dir\" does not exist"; exit 1; }
+  [ -e $install_dir ] || { mkdir -p $install_dir ||  { echo "directory \"$install_dir\" does not exist"; exit 1; } }
   
   local config_dir=$(get_input "Configurations directory: " "/etc/dbl")
   if [ ! -e $config_dir ]
    then
-    mkdir $config_dir || (echo "Cannot create \"$config_dir\""; exit 1)
+    mkdir $config_dir || { echo "Cannot create \"$config_dir\""; exit 1; }
   fi
 
   echo cp $base_dir/blacklist_* $install_dir
   echo cp -r $base_dir/etc/* $config_dir
 
   return 0
-
 }
-main
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+then
+  main
+fi
