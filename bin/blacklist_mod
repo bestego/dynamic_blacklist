@@ -2,8 +2,6 @@
 #
 #####################################################################################
 # modifies ufw according blacklist 
-# NOTE: NAME MUST BE <= 15 CHARACTERS IN ORDER FOR
-#	 pgrep truncates process name to 15 characters!
 #
 # 180109 EvG: created for amsterdam Ubuntu
 # 180110 EvG: v3.0 <add comment>
