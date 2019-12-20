@@ -31,6 +31,10 @@ function main() {
 
   local user=${BATS_USER:-$(whoami)}	# BATS_USER: for test manupilation
   [ $user == "root" ] || { echo "must run as 'root'"; exit 1; }
+
+  # restore terminal state after ctrl-c on get_input
+  local original_tty_state=$(stty -g)
+  trap "{ stty $original_tty_state; exit 0 }"  INT
  
   local install_dir=$(get_input "Executables directory: " "/usr/local/bin")
   if [ ! -e $install_dir ] 
