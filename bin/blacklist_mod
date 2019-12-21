@@ -51,7 +51,8 @@ function get_blacklist() {
     echo "ERROR: blacklist \"$BLACKLIST\" not readable"
     return 1
    else
-    touch $BLACKLIST	# create empy file of not exisiting
+    touch $BLACKLIST	# create empy file if not exisiting
+    touch ${BLACKLIST}.old # create empty file if not existing
   fi
  
   awk '/^[0-9]+/ { print $1 }' $BLACKLIST | sort -n > "${TMPFILE}_dbl"
@@ -60,7 +61,7 @@ function get_blacklist() {
 function update_firewall() {
 # update firewall with differences between blacklist and firewall
 # in: param:
-#     env: TMPFILE LOG LOCK
+#     env: BLACKLIST TMPFILE LOG LOCK
 # out: stdout: ?
 #      status: ?
 
@@ -90,13 +91,16 @@ function update_firewall() {
      # delete rule
      if [ $first == "<" ]
       then
-       if ufw delete deny from $ip
+       if grep -q $ip ${BLACKLIST}.old
         then
-         echo `date` "$ip deleted" >>$LOG
-        else
-         echo `date` "ERROR deleting $ip" >>$LOG
-       fi
-     fi
+         if ufw delete deny from $ip
+          then
+           echo `date` "$ip deleted" >>$LOG
+          else
+           echo `date` "ERROR deleting $ip" >>$LOG
+         fi #ufw
+        fi #grep
+     fi #first
   
     done
   

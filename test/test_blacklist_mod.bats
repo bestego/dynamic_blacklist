@@ -11,7 +11,7 @@ setup() {
 
 teardown() {
   true	# nop
-  rm -rf $BATS_TMPDIR
+  #rm -rf $BATS_TMPDIR
 }
 
 @test "load config file readable" {
@@ -114,6 +114,44 @@ teardown() {
 
 @test "update firewall standard" {
   PID=$$
+  BLACKLIST=$"$BATS_TMPDIR/${PID}_blacklist"
+  LOG="$BATS_TMPDIR/${PID}_log"
+  LOCK="$BATS_TMPDIR/${PID}_lock"
+  TMPFILE="$BATS_TMPDIR/${PID}"
+  echo "1,3c1,3" >>${TMPFILE}_diff
+  echo "< 69.245.220.97" >>${TMPFILE}_diff
+  echo "< 69.245.220.97" >>${BLACKLIST}.old
+  echo "< 123.207.241.223" >>${TMPFILE}_diff
+  echo "< 123.207.241.223" >>${BLACKLIST}.old
+  echo "< 210.212.203.67" >>${TMPFILE}_diff
+  echo "< 210.212.203.67" >>${BLACKLIST}.old
+  echo "---" >>${TMPFILE}_diff
+  echo "> 106.13.65.18" >>${TMPFILE}_diff
+  echo "> 118.24.81.234" >>${TMPFILE}_diff
+  echo "> 119.29.15.120" >>${TMPFILE}_diff
+  
+  source ../bin/blacklist_mod
+
+  # stubbing ufw
+  function ufw() {
+    case $1 in
+      "insert") echo "Regel ingevoerd";;
+      "delete") echo "Regel verwijderd";;
+    esac
+    return 0
+  }
+  export -f ufw
+ 
+  run update_firewall
+
+  [ $status -eq 0 ]
+  [ $(grep -ci "inserted" $LOG) -eq 3 ]
+  [ $(grep -ci "deleted" $LOG) -eq 3 ]
+}
+
+@test "update firewall missing entry or file blacklist.old" {
+  PID=$$
+  BLACKLIST=$"$BATS_TMPDIR/${PID}_blacklist"
   LOG="$BATS_TMPDIR/${PID}_log"
   LOCK="$BATS_TMPDIR/${PID}_lock"
   TMPFILE="$BATS_TMPDIR/${PID}"
@@ -142,9 +180,8 @@ teardown() {
 
   [ $status -eq 0 ]
   [ $(grep -ci "inserted" $LOG) -eq 3 ]
-  [ $(grep -ci "deleted" $LOG) -eq 3 ]
+  [ $(grep -ci "deleted" $LOG) -eq 0 ]
 }
-
 
 @test "update firewall locked" {
   PID=$$
@@ -182,13 +219,17 @@ teardown() {
 
 @test "update firewall error ufw" {
   PID=$$
+  BLACKLIST="$BATS_TMPDIR/${PID}_blacklist"
   LOG="$BATS_TMPDIR/${PID}_log"
   LOCK="$BATS_TMPDIR/${PID}_lock"
   TMPFILE="$BATS_TMPDIR/${PID}"
   echo "1,3c1,3" >>${TMPFILE}_diff
   echo "< 69.245.220.97" >>${TMPFILE}_diff
+  echo "< 69.245.220.97" >>${BLACKLIST}.old
   echo "< 123.207.241.223" >>${TMPFILE}_diff
+  echo "< 123.207.241.223" >>${BLACKLIST}.old
   echo "< 210.212.203.67" >>${TMPFILE}_diff
+  echo "< 210.212.203.67" >>${BLACKLIST}.old
   echo "---" >>${TMPFILE}_diff
   echo "> 106.13.65.18" >>${TMPFILE}_diff
   echo "> 118.24.81.234" >>${TMPFILE}_diff
