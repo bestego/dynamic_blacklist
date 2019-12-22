@@ -122,7 +122,6 @@ teardown() {
   echo "< 69.245.220.97" >>${TMPFILE}_diff
   echo "< 69.245.220.97" >>${BLACKLIST}.old
   echo "< 123.207.241.223" >>${TMPFILE}_diff
-  echo "< 123.207.241.223" >>${BLACKLIST}.old
   echo "< 210.212.203.67" >>${TMPFILE}_diff
   echo "< 210.212.203.67" >>${BLACKLIST}.old
   echo "---" >>${TMPFILE}_diff
@@ -146,10 +145,10 @@ teardown() {
 
   [ $status -eq 0 ]
   [ $(grep -ci "inserted" $LOG) -eq 3 ]
-  [ $(grep -ci "deleted" $LOG) -eq 3 ]
+  [ $(grep -ci "deleted" $LOG) -eq 2 ]
 }
 
-@test "update firewall missing entry or file blacklist.old" {
+@test "update firewall missing file blacklist.old" {
   PID=$$
   BLACKLIST=$"$BATS_TMPDIR/${PID}_blacklist"
   LOG="$BATS_TMPDIR/${PID}_log"
